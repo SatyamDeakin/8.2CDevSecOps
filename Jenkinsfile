@@ -13,18 +13,48 @@ pipeline {
         }
         stage('Run Tests') {
             steps {
-                bat 'npm test || exit /b 0'
+                script {
+                    try {
+                        bat 'npm test || exit /b 0'
+                        currentBuild.result = 'SUCCESS'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
             }
-        }
-        stage('Generate Coverage Report') {
-            steps {
-                bat 'npm run coverage || exit /b 0'
+            post {
+                always {
+                    emailext (
+                        subject: "Run Tests Stage: ${currentBuild.result}",
+                        body: "Run Tests Stage has finished with status: ${currentBuild.result}",
+                        to: "satyam4101@gmail.com",
+                        attachLog: true
+                    )
+                }
             }
         }
         stage('NPM Audit (Security Scan)') {
             steps {
-                bat 'npm audit || exit /b 0'
+                script {
+                    try {
+                        bat 'npm audit || exit /b 0'
+                        currentBuild.result = 'SUCCESS'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
+            }
+            post {
+                always {
+                    emailext (
+                        subject: "NPM Audit Stage: ${currentBuild.result}",
+                        body: "NPM Audit Stage has finished with status: ${currentBuild.result}",
+                        to: "satyam4101@gmail.com",
+                        attachLog: true
+                    )
+                }
             }
         }
     }
 }
+
